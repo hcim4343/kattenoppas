@@ -1,0 +1,356 @@
+<title>Kattenoppas Logboek</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one narrow column, phone-first. Status of the house on top, one big action, then the logbook by day. */
+:root {
+  --bg: #f3f5f2;
+  --surface: #ffffff;
+  --ink: #1d2a2a;
+  --muted: #5f6e6c;
+  --line: #dde3df;
+  --accent: #1f5f5b;       /* deep teal */
+  --accent-ink: #ffffff;
+  --warm: #e2a33a;         /* marigold, tabby fur */
+  --warm-soft: #fbefd6;
+  --here: #2f8a5b;
+  --here-soft: #e2f2e8;
+  --warn: #b5541f;
+  --warn-soft: #f9e5d8;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121a1a; --surface: #1a2424; --ink: #e6ecea; --muted: #9aaaa7; --line: #2b3837;
+  --accent: #5fb7ae; --accent-ink: #0d1716; --warm: #f0b552; --warm-soft: #3a2f1a;
+  --here: #6cc996; --here-soft: #1c3428; --warn: #ef9a66; --warn-soft: #3d2619; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121a1a; --surface: #1a2424; --ink: #e6ecea; --muted: #9aaaa7; --line: #2b3837;
+  --accent: #5fb7ae; --accent-ink: #0d1716; --warm: #f0b552; --warm-soft: #3a2f1a;
+  --here: #6cc996; --here-soft: #1c3428; --warn: #ef9a66; --warn-soft: #3d2619; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 560px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+h1, h2 { font-family: var(--display); margin: 0; text-wrap: balance; }
+h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: .01em; display: flex; align-items: center; gap: 10px; }
+h1 svg { color: var(--warm); flex: none }
+h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 700; font-family: var(--body); }
+
+.status { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+.headline { font-family: var(--display); font-size: clamp(1.6rem, 6vw, 2.1rem); line-height: 1.15; font-weight: 700; }
+.headline .empty { color: var(--muted); }
+.present { display: flex; flex-direction: column; gap: 10px; }
+.person { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--here-soft); }
+.person.stale { background: var(--warn-soft); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; flex: none; object-fit: cover; background: var(--line); }
+.person .who { font-weight: 700; }
+.person .since { color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
+.person .grow { flex: 1; min-width: 0; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--here); flex: none; box-shadow: 0 0 0 4px color-mix(in srgb, var(--here) 25%, transparent); }
+.stale .dot { background: var(--warn); box-shadow: none; }
+
+button { font: inherit; cursor: pointer; border-radius: 12px; border: 1px solid transparent; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--warm); outline-offset: 2px; }
+.primary { background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 1.1rem; padding: 16px 20px; width: 100%; }
+.primary.leave { background: var(--warm); color: #2a1d05; }
+.primary:disabled { opacity: .55; cursor: default; }
+.ghost { background: transparent; border-color: var(--line); color: var(--ink); padding: 8px 14px; font-size: .9rem; }
+.small { font-size: .85rem; padding: 6px 10px; }
+
+.panel { display: flex; flex-direction: column; gap: 14px; border-top: 1px dashed var(--line); padding-top: 16px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { background: var(--surface); border: 1px solid var(--line); color: var(--ink); padding: 8px 14px; border-radius: 999px; font-size: .95rem; }
+.chip[aria-pressed="true"] { background: var(--warm-soft); border-color: var(--warm); font-weight: 700; }
+label { font-size: .9rem; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+input[type=text], textarea { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+textarea { min-height: 70px; resize: vertical; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; }
+.hint { color: var(--muted); font-size: .9rem; margin: 0; }
+.error { color: var(--warn); font-size: .9rem; margin: 0; }
+
+.log { display: flex; flex-direction: column; gap: 22px; }
+.day { display: flex; flex-direction: column; gap: 8px; }
+.entry { display: grid; grid-template-columns: 34px 1fr; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.entry:last-child { border-bottom: 0; }
+.entry .avatar { grid-row: span 3; }
+.entry .top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.entry .when { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .92rem; }
+.entry .tasks { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: .78rem; background: var(--warm-soft); color: var(--ink); padding: 2px 9px; border-radius: 999px; }
+.tag.live { background: var(--here-soft); }
+.entry .note { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+.emptylog { color: var(--muted); padding: 18px; border: 1px dashed var(--line); border-radius: 14px; margin: 0; }
+.namefix { display: flex; gap: 8px; align-items: end; }
+@media (prefers-reduced-motion: no-preference) { .person { animation: in .3s ease-out both } @keyframes in { from { transform: translateY(4px); opacity: .6 } } }
+</style>
+
+<div class="wrap">
+  <h1>
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4l3.2 3.6A8.6 8.6 0 0 1 12 6.4c1.8 0 3.4.4 4.8 1.2L20 4v8.2c0 4.6-3.6 7.8-8 7.8s-8-3.2-8-7.8V4z" fill="currentColor"/><circle cx="9" cy="12.4" r="1.2" fill="var(--bg)"/><circle cx="15" cy="12.4" r="1.2" fill="var(--bg)"/></svg>
+    Kattenoppas Logboek
+  </h1>
+
+  <section class="status" aria-live="polite">
+    <div class="headline" id="headline"><span class="empty">Even kijken wie er is…</span></div>
+    <div class="present" id="present"></div>
+    <div id="action"></div>
+  </section>
+
+  <section class="log" aria-labelledby="logtitle">
+    <h2 id="logtitle">Logboek</h2>
+    <div id="log"><p class="emptylog">Hier komt elk bezoek: wie, wanneer aangekomen, wanneer vertrokken en wat er gedaan is.</p></div>
+  </section>
+</div>
+
+<script>
+const TASKS = ["Eten gegeven", "Vers water", "Kattenbak proper", "Medicatie", "Geknuffeld", "Planten water"];
+const STALE_MS = 14 * 3600e3;
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+let db = null, user = null, me = null, myProfileName = "", isOwner = false, canWrite = false;
+let visits = [], nicknames = {}, ready = false;
+let mode = null; // null | "leaving" | "naming"
+let picked = new Set(), busy = false, errMsg = "";
+let renderSeq = 0;
+
+const timeFmt = new Intl.DateTimeFormat("nl-BE", { hour: "2-digit", minute: "2-digit" });
+const dayFmt = new Intl.DateTimeFormat("nl-BE", { weekday: "long", day: "numeric", month: "long" });
+const t = (ms) => timeFmt.format(new Date(ms));
+function dayLabel(ms) {
+  const d = new Date(ms); d.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((today - d) / 864e5);
+  if (diff === 0) return "Vandaag";
+  if (diff === 1) return "Gisteren";
+  return dayFmt.format(d);
+}
+function dur(ms) {
+  const m = Math.max(1, Math.round(ms / 60000));
+  if (m < 60) return m + " min";
+  const h = Math.floor(m / 60), r = m % 60;
+  return h + " u" + (r ? " " + r : "");
+}
+function sinceText(ms) {
+  const d = new Date(ms), now = new Date();
+  return (d.toDateString() === now.toDateString() ? "sinds " + t(ms) : "sinds " + dayLabel(ms).toLowerCase() + " " + t(ms)) + " · " + dur(Date.now() - ms);
+}
+
+async function people(ids) {
+  if (!user || !ids.length) return {};
+  try { return await user.profiles(ids); } catch { return {}; }
+}
+function nameOf(ps, id) {
+  return (ps[id] && ps[id].name) || nicknames[id] || (id === me ? (myProfileName || "Jij") : "Iemand");
+}
+function avatar(ps, id) {
+  const img = el("img", "avatar"); img.alt = "";
+  if (ps[id]) img.src = ps[id].avatarUrl;
+  return img;
+}
+
+async function render() {
+  const seq = ++renderSeq;
+  const ids = [...new Set(visits.map(v => v.who).filter(Boolean))];
+  const ps = await people(ids);
+  if (seq !== renderSeq) return;
+
+  const open = visits.filter(v => !v.out);
+  const mine = open.find(v => v.who === me);
+
+  // Headline + who is there
+  const head = $("#headline"); head.textContent = "";
+  const pres = $("#present"); pres.textContent = "";
+  if (!ready) {
+    head.append(el("span", "empty", db ? "Even kijken wie er is…" : "Open dit logboek via de gedeelde link en log in om mee te doen."));
+  } else if (!open.length) {
+    head.append(el("span", "empty", "Er is nu niemand bij de katten."));
+  } else {
+    const names = open.map(v => v.who === me ? "Jij" : nameOf(ps, v.who));
+    head.textContent = names.length === 1
+      ? (names[0] === "Jij" ? "Jij bent bij de katten." : names[0] + " is bij de katten.")
+      : names.slice(0, -1).join(", ") + " en " + names.at(-1) + " zijn bij de katten.";
+    for (const v of open) {
+      const stale = Date.now() - v.in > STALE_MS;
+      const row = el("div", "person" + (stale ? " stale" : ""));
+      row.append(el("span", "dot"), avatar(ps, v.who));
+      const g = el("div", "grow");
+      g.append(el("div", "who", v.who === me ? "Jij" : nameOf(ps, v.who)));
+      g.append(el("div", "since", stale ? "Aangekomen " + sinceText(v.in).replace("sinds ", "") + " · vergeten uit te checken?" : sinceText(v.in)));
+      row.append(g);
+      if (stale && canWrite && v.who !== me) {
+        const b = el("button", "ghost small", "Afsluiten");
+        b.onclick = () => closeStale(v);
+        row.append(b);
+      }
+      pres.append(row);
+    }
+  }
+
+  renderAction(mine);
+  renderLog(ps);
+}
+
+function renderAction(mine) {
+  const box = $("#action");
+  const keep = {}; for (const f of box.querySelectorAll("input,textarea")) keep[f.id] = f.value;
+  const focusId = box.contains(document.activeElement) ? document.activeElement.id : null;
+  box.textContent = "";
+  queueMicrotask(() => {
+    for (const id in keep) { const f = document.getElementById(id); if (f) f.value = keep[id]; }
+    if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
+  });
+  if (!ready) return;
+  if (!canWrite) {
+    box.append(el("p", "hint", "Je kan meekijken, maar niet in- of uitchecken. Vraag de eigenaar om je als Editor uit te nodigen."));
+    return;
+  }
+  const needsName = !myProfileName && !nicknames[me];
+
+  if (mode === "naming" || (needsName && mode !== "leaving" && !mine)) {
+    const p = el("div", "panel"); p.style.borderTop = "0"; p.style.paddingTop = "0";
+    const lab = el("label", null, "Hoe heet je? Zo weten de anderen wie er is.");
+    const inp = el("input"); inp.type = "text"; inp.id = "nick"; inp.maxLength = 40; inp.autocomplete = "given-name";
+    inp.value = nicknames[me] || "";
+    lab.append(inp); p.append(lab);
+    const go = el("button", "primary", mine ? "Naam opslaan" : "Ik ben aangekomen");
+    go.disabled = busy;
+    go.onclick = async () => {
+      const n = inp.value.trim();
+      if (!n) { inp.focus(); return; }
+      await saveNickname(n);
+      if (!mine) await checkIn(); else { mode = null; render(); }
+    };
+    p.append(go);
+    if (errMsg) p.append(el("p", "error", errMsg));
+    box.append(p);
+    return;
+  }
+
+  if (!mine) {
+    const b = el("button", "primary", "Ik ben aangekomen");
+    b.disabled = busy; b.onclick = checkIn;
+    box.append(b);
+  } else if (mode !== "leaving") {
+    const b = el("button", "primary leave", "Ik vertrek");
+    b.disabled = busy; b.onclick = () => { mode = "leaving"; picked = new Set(); render(); };
+    box.append(b);
+  } else {
+    const p = el("div", "panel");
+    p.append(el("p", "hint", "Wat heb je gedaan? (optioneel)"));
+    const chips = el("div", "chips");
+    for (const task of TASKS) {
+      const c = el("button", "chip", task); c.type = "button";
+      c.setAttribute("aria-pressed", picked.has(task));
+      c.onclick = () => { picked.has(task) ? picked.delete(task) : picked.add(task); c.setAttribute("aria-pressed", picked.has(task)); };
+      chips.append(c);
+    }
+    p.append(chips);
+    const lab = el("label", null, "Notitie voor de anderen");
+    const ta = el("textarea"); ta.id = "note"; ta.maxLength = 500; ta.placeholder = "Bv. Minou at niet veel, kattenbrokken bijna op.";
+    lab.append(ta); p.append(lab);
+    const row = el("div", "row");
+    const ok = el("button", "primary leave", "Bevestig vertrek");
+    ok.disabled = busy; ok.onclick = () => checkOut(mine, ta.value.trim());
+    const cancel = el("button", "ghost", "Toch nog niet");
+    cancel.onclick = () => { mode = null; render(); };
+    row.append(ok, cancel); p.append(row);
+    box.append(p);
+  }
+  if (errMsg) box.append(el("p", "error", errMsg));
+}
+
+function renderLog(ps) {
+  const box = $("#log"); box.textContent = "";
+  if (!ready || !visits.length) {
+    box.append(el("p", "emptylog", ready
+      ? "Nog geen bezoeken. Wie als eerste langskomt, tikt op “Ik ben aangekomen”."
+      : "Hier komt elk bezoek: wie, wanneer aangekomen, wanneer vertrokken en wat er gedaan is."));
+    return;
+  }
+  let curDay = null, dayBox = null;
+  for (const v of visits) {
+    const label = dayLabel(v.in);
+    if (label !== curDay) {
+      curDay = label; dayBox = el("div", "day");
+      dayBox.append(el("h2", null, label)); box.append(dayBox);
+    }
+    const e = el("div", "entry");
+    e.append(avatar(ps, v.who));
+    const top = el("div", "top");
+    top.append(el("strong", null, v.who === me ? "Jij" : nameOf(ps, v.who)));
+    top.append(el("span", "when", v.out ? t(v.in) + " – " + t(v.out) + "  (" + dur(v.out - v.in) + ")" : t(v.in) + " – nu"));
+    e.append(top);
+    const tasks = el("div", "tasks");
+    if (!v.out) tasks.append(el("span", "tag live", "Nu aanwezig"));
+    for (const k of (Array.isArray(v.tasks) ? v.tasks : [])) tasks.append(el("span", "tag", String(k)));
+    if (v.closedBy) tasks.append(el("span", "tag", "Afgesloten door " + nameOf(ps, v.closedBy)));
+    if (tasks.childNodes.length) e.append(tasks);
+    if (v.note) e.append(el("p", "note", String(v.note)));
+    dayBox.append(e);
+  }
+}
+
+async function guarded(fn) {
+  if (busy) return;
+  busy = true; errMsg = ""; render();
+  try { await fn(); }
+  catch (e) {
+    errMsg = e && e.code === "invalid_argument"
+      ? "Dat lukte niet: je hebt geen schrijfrechten op dit logboek."
+      : "Dat lukte niet. Controleer je verbinding en probeer opnieuw.";
+    if (e && e.code === "invalid_argument") canWrite = false;
+  }
+  busy = false; render();
+}
+function checkIn() {
+  return guarded(async () => {
+    await db.collection("visits").add({ who: me, in: Date.now(), out: null });
+    mode = null;
+  });
+}
+function checkOut(v, note) {
+  return guarded(async () => {
+    await db.doc("visits/" + v.id).update({ out: Date.now(), tasks: [...picked], note: note || "" });
+    mode = null; picked = new Set();
+  });
+}
+function closeStale(v) {
+  return guarded(async () => {
+    await db.doc("visits/" + v.id).update({ out: Date.now(), closedBy: me });
+  });
+}
+async function saveNickname(n) {
+  try { await db.doc("names/" + me).set({ name: n }); nicknames[me] = n; }
+  catch { errMsg = "Je naam kon niet bewaard worden."; }
+}
+
+(async () => {
+  if (!window.claude || !window.claude.use) { render(); return; }
+  [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  if (!db) { render(); return; }
+  if (user) {
+    const v = await user.me();
+    me = v.id; myProfileName = v.name || ""; isOwner = v.isOwner;
+    const cw = await user.can("data.write");
+    canWrite = !!me && cw !== false;
+  }
+  db.collection("visits").orderBy("in", "desc").limit(80).onSnapshot(s => {
+    visits = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    ready = true; render();
+  }, () => { ready = true; render(); });
+  db.collection("names").onSnapshot(s => {
+    nicknames = {};
+    s.docs.forEach(d => { const n = d.data().name; if (typeof n === "string") nicknames[d.id] = n.slice(0, 40); });
+    render();
+  });
+})();
+
+setInterval(() => { if (ready) render(); }, 60000);
+render();
+</script>
